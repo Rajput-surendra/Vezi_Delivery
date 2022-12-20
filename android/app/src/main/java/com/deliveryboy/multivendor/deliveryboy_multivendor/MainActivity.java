@@ -1,0 +1,6 @@
+package com.vezi.driver;
+
+import io.flutter.embedding.android.FlutterActivity;
+
+public class MainActivity extends FlutterActivity {
+}
