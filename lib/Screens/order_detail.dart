@@ -1572,6 +1572,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_firebase_chat_core/flutter_firebase_chat_core.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:sizer/sizer.dart';
@@ -1970,7 +1971,7 @@ class StateOrder extends State<OrderDetail> with TickerProviderStateMixin {
                                                 true,
                                               );
                                             } else {
-                                              updatNewOrder(
+                                              updateOrder(
                                                   orderItems!.curSelected,
                                                   model.id,
                                                   true,
@@ -2205,7 +2206,7 @@ class StateOrder extends State<OrderDetail> with TickerProviderStateMixin {
                             setState(() {
                               Navigator.pop(context);
                             });
-                            updatNewOrder(curSelected, id, item, otp);
+                            updateOrder(curSelected, id, item, otp);
                           }
                         })
                   ],
@@ -2257,7 +2258,7 @@ class StateOrder extends State<OrderDetail> with TickerProviderStateMixin {
                             .textTheme
                             .button!
                             .copyWith(color: lightBlack2)),
-                    Text("${CUR_CURRENCY!} ${widget.model!.subTotal!}",
+                    Text(" ${widget.model!.subTotal!} ${CUR_CURRENCY!}",
                         style: Theme.of(context)
                             .textTheme
                             .button!
@@ -2275,7 +2276,7 @@ class StateOrder extends State<OrderDetail> with TickerProviderStateMixin {
                             .textTheme
                             .button!
                             .copyWith(color: lightBlack2)),
-                    Text("+ ${CUR_CURRENCY!} ${widget.model!.delCharge!}",
+                    Text("+  ${widget.model!.delCharge!} ${CUR_CURRENCY!}",
                         style: Theme.of(context)
                             .textTheme
                             .button!
@@ -2293,7 +2294,7 @@ class StateOrder extends State<OrderDetail> with TickerProviderStateMixin {
                             .textTheme
                             .button!
                             .copyWith(color: lightBlack2)),
-                    Text("+ ${CUR_CURRENCY!} ${widget.model!.taxAmt!}",
+                    Text("+  ${widget.model!.taxAmt!} ${CUR_CURRENCY!}",
                         style: Theme.of(context)
                             .textTheme
                             .button!
@@ -2311,7 +2312,7 @@ class StateOrder extends State<OrderDetail> with TickerProviderStateMixin {
                             .textTheme
                             .button!
                             .copyWith(color: lightBlack2)),
-                    Text("- ${CUR_CURRENCY!} ${widget.model!.promoDis!}",
+                    Text("-  ${widget.model!.promoDis!} ${CUR_CURRENCY!}",
                         style: Theme.of(context)
                             .textTheme
                             .button!
@@ -2329,7 +2330,7 @@ class StateOrder extends State<OrderDetail> with TickerProviderStateMixin {
                             .textTheme
                             .button!
                             .copyWith(color: lightBlack2)),
-                    Text("- ${CUR_CURRENCY!} ${widget.model!.walBal!}",
+                    Text("- ${widget.model!.walBal!}  ${CUR_CURRENCY!}",
                         style: Theme.of(context)
                             .textTheme
                             .button!
@@ -2346,7 +2347,7 @@ class StateOrder extends State<OrderDetail> with TickerProviderStateMixin {
                     Text("$TOTAL_PRICE :",
                         style: Theme.of(context).textTheme.button!.copyWith(
                             color: lightBlack, fontWeight: FontWeight.bold)),
-                    Text("${CUR_CURRENCY!} ${widget.model!.total!}",
+                    Text(" ${widget.model!.total!} ${CUR_CURRENCY!}",
                         style: Theme.of(context).textTheme.button!.copyWith(
                             color: lightBlack, fontWeight: FontWeight.bold))
                   ],
@@ -2435,10 +2436,11 @@ class StateOrder extends State<OrderDetail> with TickerProviderStateMixin {
       children: <Widget>[
         InkWell(
           onTap: () async {
-            var _image =
-                await ImagePicker.platform.pickImage(source: ImageSource.camera);
-            print(_image!.path);
-            addImage(_image);
+            uploadAadharFromCamOrGallary(context);
+            // var _image =
+            //     await ImagePicker.platform.pickImage(source: ImageSource.camera);
+            // print(_image!.path);
+            //addImage(_image);
 
           },
           child: Padding(
@@ -2516,8 +2518,9 @@ class StateOrder extends State<OrderDetail> with TickerProviderStateMixin {
                                      child: InkWell(
                                        onTap: (){
                                          setState(() {
-                                           selectedImageList.remove(imageList[index].path);
-                                           imageList[index].path == null;
+                                           imageList.clear();
+                                          /* selectedImageList.remove(imageList[index].path);
+                                           imageList[index].path == null;*/
                                          });
                                        },
                                        child: Container(
@@ -2541,6 +2544,60 @@ class StateOrder extends State<OrderDetail> with TickerProviderStateMixin {
       ],
     );
  }
+
+  uploadAadharFromCamOrGallary(BuildContext context) {
+    containerForSheet<String>(
+      context: context,
+      child: CupertinoActionSheet(
+        actions: <Widget>[
+          CupertinoActionSheetAction(
+            child: Text(
+              "Camera",
+              style: TextStyle(color: Colors.black, fontSize: 15),
+            ),
+            onPressed: () async {
+              var _image =
+              await ImagePicker.platform.pickImage(source: ImageSource.camera);
+              print(_image!.path);
+              addImage(_image);
+              Navigator.of(context, rootNavigator: true).pop("Discard");
+            },
+          ),
+          CupertinoActionSheetAction(
+            child: Text(
+              "Photo & Video Library",
+              style: TextStyle(color: Colors.black, fontSize: 15),
+            ),
+            onPressed: () async {
+              var _image =
+              await ImagePicker.platform.pickImage(source: ImageSource.gallery);
+              print(_image!.path);
+              addImage(_image);
+              Navigator.of(context, rootNavigator: true).pop("Discard");
+            },
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          child: Text(
+            "Cancel",
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          ),
+          isDefaultAction: true,
+          onPressed: () {
+            Navigator.pop(context, 'Cancel');
+            Navigator.of(context, rootNavigator: true).pop("Discard");
+          },
+        ),
+      ),
+    );
+  }
+
+  void containerForSheet<T>({BuildContext? context, Widget? child}) {
+    showCupertinoModalPopup<T>(
+      context: context!,
+      builder: (BuildContext context) => child!,
+    ).then<void>((T? value) {});
+  }
   Widget sellerDetails() {
     return Card(
         elevation: 0,
@@ -2611,8 +2668,8 @@ class StateOrder extends State<OrderDetail> with TickerProviderStateMixin {
                               )),
                           Padding(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 15.0, vertical: 3),
-                              child: Text(capitalize(widget.model!.itemList![0].sellerAddress.toString()),
+                                  horizontal: 18.0, vertical: 3),
+                              child: Text(capitalize(widget.model!.itemList![0].sellerName.toString()),
                                   style: const TextStyle(color: lightBlack2))),
                           InkWell(
                               child: Padding(
@@ -2735,7 +2792,7 @@ class StateOrder extends State<OrderDetail> with TickerProviderStateMixin {
                               )
                             ]),
                             Text(
-                              "${CUR_CURRENCY!} ${orderItem.price!}",
+                              " ${orderItem.price!} ${CUR_CURRENCY!}",
                               style: Theme.of(context)
                                   .textTheme
                                   .subtitle1!
@@ -2918,47 +2975,49 @@ class StateOrder extends State<OrderDetail> with TickerProviderStateMixin {
   }
 
 
-  updatNewOrder(String? status, String? id, bool item, String? otp) async {
-    var headers = {
-      'Cookie': 'ci_session=243590d7fe908e1a5794031212d5228900f894ca'
-    };
-    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/updat_order_status'));
-    request.fields.addAll({
-      'order_id': '${id}',
-      'status': '${status}',
-      'delivery_boy_id': '${CUR_USERID}',
-      'otp': '${otp}'
-    });
-
-    for(int i = 0;i<selectedImageList.length;i++ ){
-
-     selectedImageList == null ? null: request.files.add(await http.MultipartFile.fromPath('image[]', '${selectedImageList[i].toString()}'));
-    }
-    // request.files.add(await http.MultipartFile.fromPath('image[]', '/C:/Users/indian 5/Pictures/Screenshots/Screenshot_20221214_042157.png'));
-    // request.files.add(await http.MultipartFile.fromPath('image[]', '/C:/Users/indian 5/Pictures/Screenshots/Screenshot_20221214_103058.png'));
-    // request.files.add(await http.MultipartFile.fromPath('image[]', '/C:/Users/indian 5/Pictures/Screenshots/Screenshot_20221215_054915.png'));
-    // request.files.add(await http.MultipartFile.fromPath('image[]', '/C:/Users/indian 5/Pictures/Screenshots/Screenshot_20221215_070850.png'));
-    request.headers.addAll(headers);
-
-    http.StreamedResponse response = await request.send();
-
-    if (response.statusCode == 200) {
-      setState(() {
-        selectedImageList.clear();
-        imageList.clear();
-      });
-
-    final  Result = await response.stream.bytesToString();
-    final getdata = (jsonDecode(Result));
-    print("Surendra--------------${getdata.toString()}");
-    print("Surendra--------------${Result.toString()}");
-    }
-    else {
-    print(response.reasonPhrase);
-    setSnackbar(somethingMSg);
-    }
-
-  }
+  // updatNewOrder(String? status, String? id, bool item, String? otp) async {
+  //   var headers = {
+  //     'Cookie': 'ci_session=243590d7fe908e1a5794031212d5228900f894ca'
+  //   };
+  //   var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/updat_order_status'));
+  //   request.fields.addAll({
+  //     'order_id': '${id}',
+  //     'status': '${status}',
+  //     'delivery_boy_id': '${CUR_USERID}',
+  //     'otp': '${otp}'
+  //   });
+  //  print("dddddddddddddddddddddd${request.fields.toString()}");
+  //   for(int i = 0;i<selectedImageList.length;i++ ){
+  //
+  //    selectedImageList == null ? null: request.files.add(await http.MultipartFile.fromPath('image[]', '${selectedImageList[i].toString()}'));
+  //   }
+  //   // request.files.add(await http.MultipartFile.fromPath('image[]', '/C:/Users/indian 5/Pictures/Screenshots/Screenshot_20221214_042157.png'));
+  //   // request.files.add(await http.MultipartFile.fromPath('image[]', '/C:/Users/indian 5/Pictures/Screenshots/Screenshot_20221214_103058.png'));
+  //   // request.files.add(await http.MultipartFile.fromPath('image[]', '/C:/Users/indian 5/Pictures/Screenshots/Screenshot_20221215_054915.png'));
+  //   // request.files.add(await http.MultipartFile.fromPath('image[]', '/C:/Users/indian 5/Pictures/Screenshots/Screenshot_20221215_070850.png'));
+  //   request.headers.addAll(headers);
+  //
+  //   http.StreamedResponse response = await request.send();
+  //   //print("dddddddddddddddddddddd${request.fields.toString()}");
+  //
+  //   if (response.statusCode == 200) {
+  //     setState(() {
+  //       selectedImageList.clear();
+  //       imageList.clear();
+  //     });
+  //
+  //   final  Result = await response.stream.bytesToString();
+  //   final getdata = (jsonDecode(Result));
+  //   Fluttertoast.showToast(msg: "Update Order SuccessFully");
+  //   print("Surendra--------------${getdata.toString()}");
+  //   print("Surendra--------------${Result.toString()}");
+  //   }
+  //   else {
+  //   print(response.reasonPhrase);
+  //   setSnackbar(somethingMSg);
+  //   }
+  //
+  // }
 
   void _launchCaller(String phoneNumber) async {
     var url = "tel:91$phoneNumber";

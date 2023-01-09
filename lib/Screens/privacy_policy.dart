@@ -172,6 +172,8 @@ class StatePrivacy extends State<PrivacyPolicy> with TickerProviderStateMixin {
         Response response =
             await post(getSettingApi, body: parameter, headers: headers)
                 .timeout(Duration(seconds: timeOut));
+          print(getSettingApi.toString());
+          print(parameter.toString());
 
         var getdata = json.decode(response.body);
 

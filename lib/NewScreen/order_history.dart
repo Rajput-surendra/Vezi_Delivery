@@ -326,7 +326,7 @@ class StateOrderHistory extends State<OrderHistory> with TickerProviderStateMixi
                                                       ),
                                                       SizedBox(width:  3.34.w,),
                                                       text(
-                                                        "Earning Amount : ₹${item.earning.toString()}",
+                                                        "Earning Amount : ₹${item.earning.toString()} AED",
                                                         textColor: Color(0xffBF2330),
                                                         fontSize: 7.sp,
                                                         fontFamily: fontBold,

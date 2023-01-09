@@ -362,7 +362,7 @@ class StateHome extends State<Home> with TickerProviderStateMixin {
                                                         ),
                                                         SizedBox(width:  3.34.w,),
                                                         text(
-                                                          "Earning Amount : ₹${item.delCharge.toString()}",
+                                                          "Earning Amount :${item.delCharge.toString()} AED",
                                                           textColor: Color(0xffBF2330),
                                                           fontSize: 7.sp,
                                                           fontFamily: fontBold,
@@ -459,7 +459,7 @@ class StateHome extends State<Home> with TickerProviderStateMixin {
                                   children: [
                                     InkWell(
                                       onTap: (){
-                                         acceptStatus(model.id, "0");
+                                         acceptStatus(model.id, "2");
                                        },
                                       child: Container(
                                         width: 32.77.w,
@@ -985,8 +985,8 @@ class StateHome extends State<Home> with TickerProviderStateMixin {
         Response response =
         await post(getOrdersApi, body: parameter, headers: headers)
             .timeout(Duration(seconds: timeOut));
-        print(getOrdersApi);
-        print(parameter);
+        print(getOrdersApi.toString());
+        print(parameter.toString());
         var getdata = json.decode(response.body);
         bool error = getdata["error"];
         String? msg = getdata["message"];
@@ -1064,7 +1064,7 @@ class StateHome extends State<Home> with TickerProviderStateMixin {
           driverEmail = data[EMAIL];
           driverName = data[USERNAME];
           address = data['address'];
-          bankName = data['bank_no'];
+          bankName = data['bank_name'];
           image = data['image'];
           accountName = data['account_name'];
           accountNumber = data['account_no'];
@@ -1272,45 +1272,55 @@ orderList.clear();*/
       children: [
         Expanded(
           flex: 2,
-          child: Card(
+          child: InkWell(
+            onTap: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context)=>OrderHistory()));
+            },
+            child: Card(
+                elevation: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(18.0),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.shopping_cart,
+                        color: fontColor,
+                      ),
+                      Text(ORDER),
+                      Text(
+                        total.toString(),
+                        style: const TextStyle(
+                            color: fontColor, fontWeight: FontWeight.bold),
+                      )
+                    ],
+                  ),
+                )),
+          ),
+        ),
+        Expanded(
+          flex: 3,
+          child: InkWell(
+            onTap: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context)=>WalletHistory()));
+            },
+            child: Card(
               elevation: 0,
               child: Padding(
                 padding: const EdgeInsets.all(18.0),
                 child: Column(
                   children: [
                     const Icon(
-                      Icons.shopping_cart,
+                      Icons.account_balance_wallet,
                       color: fontColor,
                     ),
-                    Text(ORDER),
+                    Text(BAL_LBL),
                     Text(
-                      total.toString(),
+                      " $CUR_BALANCE" " ${CUR_CURRENCY!}",
                       style: const TextStyle(
                           color: fontColor, fontWeight: FontWeight.bold),
                     )
                   ],
                 ),
-              )),
-        ),
-        Expanded(
-          flex: 3,
-          child: Card(
-            elevation: 0,
-            child: Padding(
-              padding: const EdgeInsets.all(18.0),
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.account_balance_wallet,
-                    color: fontColor,
-                  ),
-                  Text(BAL_LBL),
-                  Text(
-                    " $CUR_BALANCE" " ${CUR_CURRENCY!}",
-                    style: const TextStyle(
-                        color: fontColor, fontWeight: FontWeight.bold),
-                  )
-                ],
               ),
             ),
           ),
@@ -1514,6 +1524,8 @@ orderList.clear();*/
         Response response =
         await post(getUserApi, body: parameter, headers: headers)
             .timeout(Duration(seconds: timeOut));
+        print("getUser-------------------${getUserApi.toString()}");
+        print(parameter.toString());
 
         var getdata = json.decode(response.body);
         bool error = getdata["error"];

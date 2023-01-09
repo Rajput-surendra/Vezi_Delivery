@@ -14,6 +14,7 @@ import 'package:sizer/sizer.dart';
 
 import '../Helper/constant.dart';
 import '../Helper/string.dart';
+import '../Screens/home.dart';
 
 bool _isLoading = true;
 bool isLoadingmore = true;
@@ -85,6 +86,8 @@ class _WalletHistoryState extends State<WalletHistory> {
           var getdata = json.decode(response.body);
           bool error = getdata["error"];
           String? msg = getdata["message"];
+          print("new=-==================${getFundTransferApi.toString()}");
+          print(parameter.toString());
 
           if (!error) {
             total = int.parse(getdata["total"]);
@@ -121,7 +124,14 @@ class _WalletHistoryState extends State<WalletHistory> {
       });
 
     return null;
+
   }
+
+  String? bankName;
+  String? AccountNo;
+  String? IFSCode;
+  String? AccountName;
+
   Future<Null> getUserDetail() async {
     _isNetworkAvail = await isNetworkAvailable();
     if (_isNetworkAvail) {
@@ -133,6 +143,8 @@ class _WalletHistoryState extends State<WalletHistory> {
         Response response =
         await post(getBoyDetailApi, body: parameter, headers: headers)
             .timeout(Duration(seconds: timeOut));
+        print("hist------------${getBoyDetailApi.toString()}");
+        print(parameter.toString());
 
         var getdata = json.decode(response.body);
         bool error = getdata["error"];
@@ -143,6 +155,11 @@ class _WalletHistoryState extends State<WalletHistory> {
           setState(() {
             CUR_BALANCE = double.parse(data[BALANCE]).toStringAsFixed(2);
             CUR_BONUS = data[BONUS];
+            bankName = data["bank_name"];
+            AccountNo = data["account_no"];
+            IFSCode = data["ifsc_code"];
+            AccountName = data["account_name"];
+
           });
 
         }
@@ -160,6 +177,7 @@ class _WalletHistoryState extends State<WalletHistory> {
         setState(() {
           _isNetworkAvail = false;
           _isLoading = false;
+
         });
     }
 
@@ -255,7 +273,8 @@ class _WalletHistoryState extends State<WalletHistory> {
                                 Padding(
                                     padding:
                                         EdgeInsets.fromLTRB(20.0, 0, 20.0, 0),
-                                    child: TextFormField(
+                                    child:
+                                    TextFormField(
                                       keyboardType: TextInputType.number,
                                       validator: validateField,
                                       autovalidateMode:
@@ -270,27 +289,24 @@ class _WalletHistoryState extends State<WalletHistory> {
                                                 fontWeight: FontWeight.normal),
                                       ),
                                       controller: amtC,
-                                    )),
+                                    )
+                                ),
                                 Padding(
                                     padding:
                                         EdgeInsets.fromLTRB(20.0, 0, 20.0, 0),
-                                    child: TextFormField(
-                                      validator: validateField,
-                                      keyboardType: TextInputType.multiline,
-                                      maxLines: null,
-                                      autovalidateMode:
-                                          AutovalidateMode.onUserInteraction,
-                                      decoration: InputDecoration(
-                                        hintText: BANK_DETAIL,
-                                        hintStyle: Theme.of(this.context)
-                                            .textTheme
-                                            .subtitle1!
-                                            .copyWith(
-                                                color: lightBlack,
-                                                fontWeight: FontWeight.normal),
-                                      ),
-                                      controller: bankDetailC,
-                                    )),
+                                    child:  Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        SizedBox(height: 10,),
+                                        Text("AccountName: ${AccountName.toString()}",style: TextStyle(color: black,fontWeight: FontWeight.bold),),
+                                        SizedBox(height: 4,),
+                                        Text("BankName: ${bankName.toString()}",style: TextStyle(color: black,fontWeight: FontWeight.bold)),
+                                        SizedBox(height: 4,),
+                                        Text("IFSC: ${IFSCode.toString()}",style: TextStyle(color: black,fontWeight: FontWeight.bold)),
+                                        SizedBox(height: 4,),
+                                        Text("AccountNo: ${AccountNo.toString()}",style: TextStyle(color: black,fontWeight: FontWeight.bold)),
+                                      ],
+                                    ))
                               ],
                             ))
                       ])),
@@ -324,6 +340,7 @@ class _WalletHistoryState extends State<WalletHistory> {
                           Navigator.pop(context);
                         });
                         sendRequest();
+
                       }
                     })
               ],
@@ -331,394 +348,419 @@ class _WalletHistoryState extends State<WalletHistory> {
           });
         });
   }
+  Future<Null> _refresh() {
+    offset = 0;
+    total = 0;
+    setState(() {
+      _isLoading = true;
+      isLoadingItems = false;
+    });
+   // orderList.clear();
+   return callApi();
+     // sendRequest();
+  }
+  callApi(){
+    //sendRequest();
+    getTransaction();
+   // getUserDetail();
+    getRequest();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColor().colorBg1(),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: AnimatedContainer(
-            duration: Duration(milliseconds: 1000),
-            curve: Curves.easeInOut,
-            width: 100.w,
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment(0.0, -0.5),
-                colors: [
-                  AppColor().colorBg1(),
-                  AppColor().colorBg1(),
-                ],
-                radius: 0.8,
+        child: RefreshIndicator(
+          key: _refreshIndicatorKey,
+          onRefresh: _refresh,
+          child: SingleChildScrollView(
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: 1000),
+              curve: Curves.easeInOut,
+              width: 100.w,
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0.0, -0.5),
+                  colors: [
+                    AppColor().colorBg1(),
+                    AppColor().colorBg1(),
+                  ],
+                  radius: 0.8,
+                ),
               ),
-            ),
-            padding: MediaQuery.of(context).viewInsets,
-            child: Column(
-              children: [
-                Container(
-                  height: 9.92.h,
-                  width: 100.w,
-                  decoration: BoxDecoration(
-                      image: DecorationImage(
-                    image: AssetImage(forgetBg),
-                    fit: BoxFit.fill,
-                  )),
-                  child: Center(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+              padding: MediaQuery.of(context).viewInsets,
+              child: Column(
+                children: [
+                  Container(
+                    height: 9.92.h,
+                    width: 100.w,
+                    decoration: BoxDecoration(
+                        image: DecorationImage(
+                      image: AssetImage(forgetBg),
+                      fit: BoxFit.fill,
+                    )),
+                    child: Center(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                              width: 6.38.w,
+                              height: 6.38.w,
+                              alignment: Alignment.centerLeft,
+                              margin: EdgeInsets.only(left: 7.91.w),
+                              child: InkWell(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: Image.asset(
+                                    back1,
+                                    height: 4.0.h,
+                                    width: 8.w,
+                                  ))),
+                          SizedBox(
+                            width: 2.08.h,
+                          ),
+                          Container(
+                            width: 65.w,
+                            child: text(
+                              "Wallet History",
+                              textColor: Color(0xffffffff),
+                              fontSize: 14.sp,
+                              fontFamily: fontMedium,
+                              isCentered: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 1.52.h,
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(left: 8.33.w, right: 8.33.w),
+                    padding:
+                        EdgeInsets.only(left: 2.91.w, right: 2.91.w, top: 2.67.h),
+                    height: 22.26.h,
+                    decoration: boxDecoration(
+                      showShadow: true,
+                      radius: 20.0,
+                      bgColor: AppColor().colorBg1(),
+                    ),
+                    child: Stack(
+                      alignment: Alignment.topRight,
                       children: [
-                        Container(
-                            width: 6.38.w,
-                            height: 6.38.w,
-                            alignment: Alignment.centerLeft,
-                            margin: EdgeInsets.only(left: 7.91.w),
-                            child: InkWell(
-                                onTap: () {
-                                  Navigator.pop(context);
-                                },
-                                child: Image.asset(
-                                  back1,
-                                  height: 4.0.h,
-                                  width: 8.w,
-                                ))),
-                        SizedBox(
-                          width: 2.08.h,
+                        Image.asset(
+                          filter,
+                          height: 2.26.h,
+                          width: 2.26.h,
                         ),
                         Container(
-                          width: 65.w,
-                          child: text(
-                            "Wallet History",
-                            textColor: Color(0xffffffff),
-                            fontSize: 14.sp,
-                            fontFamily: fontMedium,
-                            isCentered: true,
+                          child: Column(
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  return filterDialog();
+                                },
+                                child: Center(
+                                  child: Image.asset(
+                                    paymentIcon,
+                                    height: 8.75.h,
+                                    width: 21.94.w,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                height: 1.12.h,
+                              ),
+                              text(
+                                "Your Total Earning",
+                                textColor: Color(0xff707070),
+                                fontSize: 14.sp,
+                                fontFamily: fontBold,
+                              ),
+                              SizedBox(
+                                height: 1.02.h,
+                              ),
+                              text(
+                                  " " + CUR_BALANCE  + " " + CUR_CURRENCY!,
+                                textColor: Color(0xff000000),
+                                fontSize: 14.sp,
+                                fontFamily: fontBold,
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-                SizedBox(
-                  height: 1.52.h,
-                ),
-                Container(
-                  margin: EdgeInsets.only(left: 8.33.w, right: 8.33.w),
-                  padding:
-                      EdgeInsets.only(left: 2.91.w, right: 2.91.w, top: 2.67.h),
-                  height: 22.26.h,
-                  decoration: boxDecoration(
-                    showShadow: true,
-                    radius: 20.0,
-                    bgColor: AppColor().colorBg1(),
+                  SizedBox(
+                    height: 1.52.h,
                   ),
-                  child: Stack(
-                    alignment: Alignment.topRight,
-                    children: [
-                      Image.asset(
-                        filter,
-                        height: 2.26.h,
-                        width: 2.26.h,
-                      ),
-                      Container(
-                        child: Column(
-                          children: [
-                            InkWell(
-                              onTap: () {
-                                return filterDialog();
-                              },
-                              child: Center(
-                                child: Image.asset(
-                                  paymentIcon,
-                                  height: 8.75.h,
-                                  width: 21.94.w,
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 1.12.h,
-                            ),
-                            text(
-                              "Your Total Earning",
-                              textColor: Color(0xff707070),
-                              fontSize: 14.sp,
-                              fontFamily: fontBold,
-                            ),
-                            SizedBox(
-                              height: 1.02.h,
-                            ),
-                            text(
-                              CUR_CURRENCY! + " " + CUR_BALANCE,
-                              textColor: Color(0xff000000),
-                              fontSize: 14.sp,
-                              fontFamily: fontBold,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  Container(
+                    margin: EdgeInsets.only(left: 8.33.w, right: 8.33.w),
+                    width: 100.w,
+                    child: text(
+                      "Request For Money",
+                      textColor: Color(0xff202442),
+                      fontSize: 14.sp,
+                      fontFamily: fontBold,
+                    ),
                   ),
-                ),
-                SizedBox(
-                  height: 1.52.h,
-                ),
-                Container(
-                  margin: EdgeInsets.only(left: 8.33.w, right: 8.33.w),
-                  width: 100.w,
-                  child: text(
-                    "Request For Money",
-                    textColor: Color(0xff202442),
-                    fontSize: 14.sp,
-                    fontFamily: fontBold,
+                  SizedBox(
+                    height: 1.52.h,
                   ),
-                ),
-                SizedBox(
-                  height: 1.52.h,
-                ),
-                Container(
-                  margin: EdgeInsets.only(left: 8.33.w, right: 8.33.w),
-                  padding: EdgeInsets.only(left: 2.91.w, right: 2.91.w),
-                  height: 8.21.h,
-                  decoration: boxDecoration(
-                    showShadow: true,
-                    radius: 20.0,
-                    bgColor: AppColor().colorBg1(),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        width: 26.52.w,
-                        height: 5.23.h,
-                        child: TextFormField(
-                          cursorColor: Colors.red,
-                          keyboardType: TextInputType.number,
-                          controller: amtC,
-                          style: TextStyle(
-                            color: AppColor().colorTextFour(),
-                            fontSize: 10.sp,
-                          ),
-                          inputFormatters: [],
-                          decoration: InputDecoration(
-                            labelText: '',
-                            labelStyle: TextStyle(
+                  Container(
+                    margin: EdgeInsets.only(left: 8.33.w, right: 8.33.w),
+                    padding: EdgeInsets.only(left: 2.91.w, right: 2.91.w),
+                    height: 8.21.h,
+                    decoration: boxDecoration(
+                      showShadow: true,
+                      radius: 20.0,
+                      bgColor: AppColor().colorBg1(),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 26.52.w,
+                          height: 5.23.h,
+                          child: TextFormField(
+                            cursorColor: Colors.green,
+                            keyboardType: TextInputType.number,
+                            controller: amtC,
+                            style: TextStyle(
                               color: AppColor().colorTextFour(),
                               fontSize: 10.sp,
                             ),
-                            fillColor: AppColor().colorEdit(),
-                            enabled: true,
-                            filled: true,
-                            enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(
-                                  color: AppColor().colorBg1(), width: 5.0),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)),
-                            ),
-                          ),
-                        ),
-                      ),
-                      InkWell(
-                        onTap: () async {
-                          setState(() {
-                            enabled = true;
-                          });
-                          await Future.delayed(Duration(milliseconds: 200));
-                          setState(() {
-                            enabled = false;
-                          });
-                          _showDialog();
-                          setState(() {
-                            offset = 0;
-                            total = 0;
-                            tranList.clear();
-                          });
-
-                          //    Navigator.push(context, PageTransition(child: LoginScreen(), type: PageTransitionType.rightToLeft,duration: Duration(milliseconds: 500),));
-                        },
-                        child: ScaleAnimatedWidget.tween(
-                          enabled: enabled,
-                          duration: Duration(milliseconds: 200),
-                          scaleDisabled: 1.0,
-                          scaleEnabled: 0.9,
-                          child: Container(
-                            width: 26.52.w,
-                            height: 5.23.h,
-                            decoration: boxDecoration(
-                                radius: 15.0,
-                                bgColor: AppColor().colorPrimaryDark()),
-                            child: Center(
-                              child: text(
-                                "Request",
-                                textColor: Color(0xffffffff),
+                            inputFormatters: [],
+                            decoration: InputDecoration(
+                              hintText: 'Enter Amount',
+                              labelStyle: TextStyle(
+                                color: AppColor().colorTextFour(),
                                 fontSize: 10.sp,
-                                fontFamily: fontRegular,
+                              ),
+                              fillColor: AppColor().colorEdit(),
+                              enabled: true,
+                              filled: true,
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: AppColor().colorBg1(), width: 5.0),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(10.0)),
                               ),
                             ),
                           ),
                         ),
-                      )
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  height: 1.52.h,
-                ),
-                Container(
-                  margin: EdgeInsets.only(left: 8.33.w, right: 8.33.w),
-                  width: 100.w,
-                  child: text(
-                    "Payment History",
-                    textColor: Color(0xff202442),
-                    fontSize: 14.sp,
-                    fontFamily: fontBold,
-                  ),
-                ),
-                SizedBox(
-                  height: 1.52.h,
-                ),
-                Container(
-                  margin: EdgeInsets.only(top: 1.87.h),
-                  child: ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: (offset < total)
-                          ? tranList.length + 1
-                          : tranList.length,
-                      itemBuilder: (context, index) {
-                        return (index == tranList.length && isLoadingmore)
-                            ? Center(child: CircularProgressIndicator())
-                            : Container(
-                                height: 11.25.h,
-                                width: 82.91.w,
-                                decoration: boxDecoration(
-                                  showShadow: true,
-                                  radius: 20.0,
-                                  bgColor: AppColor().colorBg1(),
+                        InkWell(
+                          onTap: () async {
+
+                            setState(() {
+                              enabled = true;
+
+                            });
+                            await Future.delayed(Duration(milliseconds: 200));
+                            setState(() {
+                              enabled = false;
+                            });
+                            _showDialog();
+                            setState(() {
+                              offset = 0;
+                              total = 0;
+                              tranList.clear();
+
+                            });
+
+
+                            //    Navigator.push(context, PageTransition(child: LoginScreen(), type: PageTransitionType.rightToLeft,duration: Duration(milliseconds: 500),));
+                          },
+                          child: ScaleAnimatedWidget.tween(
+                            enabled: enabled,
+                            duration: Duration(milliseconds: 200),
+                            scaleDisabled: 1.0,
+                            scaleEnabled: 0.9,
+                            child: Container(
+                              width: 26.52.w,
+                              height: 5.23.h,
+                              decoration: boxDecoration(
+                                  radius: 15.0,
+                                  bgColor: AppColor().colorPrimaryDark()),
+                              child: Center(
+                                child: text(
+                                  "Request",
+                                  textColor: Color(0xffffffff),
+                                  fontSize: 10.sp,
+                                  fontFamily: fontRegular,
                                 ),
-                                margin: EdgeInsets.only(
-                                    left: 8.33.w,
-                                    right: 8.33.w,
-                                    bottom: 1.87.h),
-                                padding: EdgeInsets.only(
-                                    left: 3.05.w, right: 3.05.w),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Container(
-                                      height: 7.81.h,
-                                      width: 7.81.h,
-                                      child: Image(
-                                        image: AssetImage(package),
-                                        fit: BoxFit.fill,
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 1.52.h,
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(left: 8.33.w, right: 8.33.w),
+                    width: 100.w,
+                    child: text(
+                      "Payment History",
+                      textColor: Color(0xff202442),
+                      fontSize: 14.sp,
+                      fontFamily: fontBold,
+                    ),
+                  ),
+                  SizedBox(
+                    height: 1.52.h,
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(top: 1.87.h),
+                    child: ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: (offset < total)
+                            ? tranList.length + 1
+                            : tranList.length,
+                        itemBuilder: (context, index) {
+                          return (index == tranList.length && isLoadingmore)
+                              ? Center(child: CircularProgressIndicator())
+                              : Container(
+                                  height: 11.25.h,
+                                  width: 82.91.w,
+                                  decoration: boxDecoration(
+                                    showShadow: true,
+                                    radius: 20.0,
+                                    bgColor: AppColor().colorBg1(),
+                                  ),
+                                  margin: EdgeInsets.only(
+                                      left: 8.33.w,
+                                      right: 8.33.w,
+                                      bottom: 1.87.h),
+                                  padding: EdgeInsets.only(
+                                      left: 3.05.w, right: 3.05.w),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Container(
+                                        height: 7.81.h,
+                                        width: 7.81.h,
+                                        child: Image(
+                                          image: AssetImage(package),
+                                          fit: BoxFit.fill,
+                                        ),
                                       ),
-                                    ),
-                                    Container(
-                                      margin: EdgeInsets.only(top: 1.6.h),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Container(
-                                            child: text(
-                                                "Invoice ID : #${tranList[index].id!}",
-                                                textColor: Color(0xff191919),
-                                                fontSize: 10.5.sp,
-                                                fontFamily: fontBold,
-                                                overFlow: true),
-                                          ),
-                                          SizedBox(
-                                            height: 1.9.h,
-                                          ),
-                                          Container(
-                                            child: text(
-                                                "Close Balance: ${tranList[index].clsBal!.toString()}",
-                                                textColor: Color(0xff191919),
-                                                fontSize: 7.5.sp,
-                                                fontFamily: fontBold,
-                                                overFlow: true),
-                                          ),
-                                          Container(
-                                            child: Row(
-                                              children: [
-                                                text(
-                                                  "Amount : ",
-                                                  textColor: Color(0xff000000),
-                                                  fontSize: 7.5.sp,
-                                                  fontFamily: fontBold,
-                                                ),
-                                                SizedBox(
-                                                  width: 5,
-                                                ),
-                                                text(
-                                                  "₹${tranList[index].amt!}",
-                                                  textColor: Color(0xffF4B71E),
-                                                  fontSize: 7.5.sp,
-                                                  fontFamily: fontBold,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    SizedBox(
-                                      width: 1.05.w,
-                                    ),
-                                    Container(
-                                      margin: EdgeInsets.only(top: 1.9.h),
-                                      child: Center(
+                                      Container(
+                                        margin: EdgeInsets.only(top: 1.6.h),
                                         child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            Image(
-                                              image: AssetImage(tranList[index]
-                                                              .status ==
-                                                          "success" ||
-                                                      tranList[index].status ==
-                                                          ACCEPTED
-                                                  ? greenIcon
-                                                  : redIcon),
-                                              fit: BoxFit.fill,
-                                              height: 3.20.h,
-                                              width: 3.20.h,
-                                            ),
-                                            text(
-                                              tranList[index].status ==
-                                                          "success" ||
-                                                      tranList[index].status ==
-                                                          ACCEPTED
-                                                  ? "Received"
-                                                  : "Pending",
-                                              textColor: tranList[index]
-                                                              .status ==
-                                                          "success" ||
-                                                      tranList[index].status ==
-                                                          ACCEPTED
-                                                  ? Color(0xff79A11D)
-                                                  : Colors.red,
-                                              fontSize: 7.5.sp,
-                                              fontFamily: fontRegular,
+                                            Container(
+                                              child: text(
+                                                  "Invoice ID : #${tranList[index].id!}",
+                                                  textColor: Color(0xff191919),
+                                                  fontSize: 10.5.sp,
+                                                  fontFamily: fontBold,
+                                                  overFlow: true),
                                             ),
                                             SizedBox(
-                                              height: 0.7.h,
+                                              height: 1.9.h,
                                             ),
-                                            text(
-                                              "${tranList[index].date!}",
-                                              textColor: Color(0xff000000),
-                                              fontSize: 7.5.sp,
-                                              fontFamily: fontSemibold,
+                                            Container(
+                                              child: text( tranList[index].clsBal == null || tranList[index].clsBal == "" ? "Close Balance: 0.0":
+                                                  "Close Balance: ${tranList[index].clsBal.toString()}",
+                                                  textColor: Color(0xff191919),
+                                                  fontSize: 7.5.sp,
+                                                  fontFamily: fontBold,
+                                                  overFlow: true),
+                                            ),
+                                            Container(
+                                              child: Row(
+                                                children: [
+                                                  text(
+                                                    "Amount : ",
+                                                    textColor: Color(0xff000000),
+                                                    fontSize: 7.5.sp,
+                                                    fontFamily: fontBold,
+                                                  ),
+                                                  SizedBox(
+                                                    width: 5,
+                                                  ),
+                                                  text(
+                                                    "₹${tranList[index].amt!}",
+                                                    textColor: Color(0xffF4B71E),
+                                                    fontSize: 7.5.sp,
+                                                    fontFamily: fontBold,
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ));
-                      }),
-                ),
-                SizedBox(
-                  height: 4.02.h,
-                ),
-              ],
+                                      SizedBox(
+                                        width: 1.05.w,
+                                      ),
+                                      Container(
+                                        margin: EdgeInsets.only(top: 1.9.h),
+                                        child: Center(
+                                          child: Column(
+                                            children: [
+                                              Image(
+                                                image: AssetImage(tranList[index]
+                                                                .status ==
+                                                            "success" ||
+                                                        tranList[index].status ==
+                                                            ACCEPTED
+                                                    ? greenIcon
+                                                    : redIcon),
+                                                fit: BoxFit.fill,
+                                                height: 3.20.h,
+                                                width: 3.20.h,
+                                              ),
+                                              text(
+                                                tranList[index].status ==
+                                                            "success" ||
+                                                        tranList[index].status ==
+                                                            ACCEPTED
+                                                    ? "Received"
+                                                    : "Pending",
+                                                textColor: tranList[index]
+                                                                .status ==
+                                                            "success" ||
+                                                        tranList[index].status ==
+                                                            ACCEPTED
+                                                    ? Color(0xff79A11D)
+                                                    : Colors.red,
+                                                fontSize: 7.5.sp,
+                                                fontFamily: fontRegular,
+                                              ),
+                                              SizedBox(
+                                                height: 0.7.h,
+                                              ),
+                                              text(
+                                                "${tranList[index].date!}",
+                                                textColor: Color(0xff000000),
+                                                fontSize: 7.5.sp,
+                                                fontFamily: fontSemibold,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ));
+                        }),
+                  ),
+                  SizedBox(
+                    height: 4.02.h,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -802,6 +844,8 @@ class _WalletHistoryState extends State<WalletHistory> {
         Response response =
             await post(sendWithReqApi, body: parameter, headers: headers)
                 .timeout(Duration(seconds: timeOut));
+        print(sendWithReqApi.toString());
+        print(parameter.toString());
 
         var getdata = json.decode(response.body);
         bool error = getdata["error"];
@@ -812,6 +856,7 @@ class _WalletHistoryState extends State<WalletHistory> {
         }
         if (mounted) setState(() {});
         setSnackbar(msg, context);
+        amtC!.clear();
       } on TimeoutException catch (_) {
         setSnackbar(somethingMSg, context);
         setState(() {

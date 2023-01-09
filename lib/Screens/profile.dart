@@ -58,7 +58,6 @@ class StateProfile extends State<Profile> with TickerProviderStateMixin {
 
     addressC = new TextEditingController();
     getUserDetails();
-
     buttonController = new AnimationController(
         duration: new Duration(milliseconds: 2000), vsync: this);
 
@@ -101,7 +100,6 @@ class StateProfile extends State<Profile> with TickerProviderStateMixin {
     mobileC!.text = mobile!;
     nameC!.text = name!;
     emailC!.text = email!;
-
     addressC!.text = address1 ?? "";
 
     setState(() {});
@@ -176,6 +174,8 @@ class StateProfile extends State<Profile> with TickerProviderStateMixin {
         var request = http.MultipartRequest("POST", getUpdateUserApi);
         request.headers.addAll(headers);
         request.fields[USER_ID] = CUR_USERID!;
+        print("Surendra////////////////////${getUpdateUserApi.toString()}");
+        print(getUpdateUserApi.toString());
         var pic = await http.MultipartFile.fromPath(IMAGE, _image.path);
         request.files.add(pic);
 
@@ -227,6 +227,8 @@ class StateProfile extends State<Profile> with TickerProviderStateMixin {
     http.Response response = await http
         .post(getUpdateUserApi, body: data, headers: headers)
         .timeout(Duration(seconds: timeOut));
+    print("SurendraRaj+++++++++++++++++++++${getUpdateUserApi.toString()}");
+    print(data.toString());
 
     if (response.statusCode == 200) {
       var getdata = json.decode(response.body);
@@ -864,7 +866,7 @@ class StateProfile extends State<Profile> with TickerProviderStateMixin {
                                   children: <Widget>[
                                     setUser(),
                                     _getDivider(),
-                                    setShow("Email", email!,Icons.mail_outline),
+                                    //setShow("Email", email!,Icons.mail_outline),
                                     //setEmail(),
                                     //_getDivider(),
                                     setMobileNo(),
